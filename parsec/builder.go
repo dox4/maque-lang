@@ -1,42 +1,46 @@
 package parsec
 
-import "strings"
+import (
+	"strings"
 
-type Parser func(string) (string, interface{})
+	"github.com/dox4/maque-lang/option"
+)
+
+type Parser func(string) (string, *option.Option)
 
 func Char(ch int) Parser {
-	return func(src string) (string, interface{}) {
+	return func(src string) (string, *option.Option) {
 		if len(src) == 0 || int(src[0]) != ch {
-			return src, -1
+			return src, option.OfNilable(nil)
 		}
-		return src[1:], int32(src[0])
+		return src[1:], option.OfValue(int32(src[0]))
 	}
 }
 
 func Keyword(kw string) Parser {
-	return func(s string) (string, interface{}) {
+	return func(s string) (string, *option.Option) {
 		if len(s) < len(kw) || !strings.HasPrefix(s, kw) {
-			return s, nil
+			return s, option.OfNil()
 		}
-		return s[len(kw):], kw
+		return s[len(kw):], option.OfValue(kw)
 	}
 }
 
 func OneOf(set string) Parser {
-	return func(s string) (string, interface{}) {
+	return func(s string) (string, *option.Option) {
 		if len(s) == 0 || !strings.ContainsRune(set, rune(s[0])) {
-			return s, nil
+			return s, option.OfNil()
 		}
-		return s[1:], int32(s[0])
+		return s[1:], option.OfValue(int32(s[0]))
 	}
 }
 
 func Satisfy(cond func(int32) bool) Parser {
-	return func(s string) (string, interface{}) {
+	return func(s string) (string, *option.Option) {
 		if len(s) == 0 || !cond(int32(s[0])) {
-			return s, nil
+			return s, option.OfNil()
 		}
-		return s[1:], int32(s[0])
+		return s[1:], option.OfValue(int32(s[0]))
 	}
 }
 
@@ -44,6 +48,6 @@ func (p Parser) Accumulate() Parser {
 	return nil
 }
 
-// var Blank Parser = func(s string) (string, interface{}) {
+// var Blank Parser = func(s string) (string, *option.Option) {
 
 // }
