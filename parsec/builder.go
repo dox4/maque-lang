@@ -43,11 +43,3 @@ func Satisfy(cond func(int32) bool) Parser {
 		return s[1:], option.OfValue(int32(s[0]))
 	}
 }
-
-func (p Parser) Accumulate() Parser {
-	return nil
-}
-
-// var Blank Parser = func(s string) (string, *option.Option) {
-
-// }
