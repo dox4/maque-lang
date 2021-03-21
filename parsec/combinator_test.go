@@ -1,6 +1,7 @@
 package parsec
 
 import (
+	// "strconv"
 	"testing"
 	"unicode"
 
@@ -88,23 +89,39 @@ func TestParser_Accumulate(t *testing.T) {
 
 	name := Satisfy(func(ch int32) bool {
 		return unicode.IsLetter(ch)
-	}).Many().Map(func(i interface{}) interface{} {
-		arr := i.([]interface{})
-		runes := make([]rune, len(arr))
-		for i, v := range arr {
-			runes[i] = v.(rune)
-		}
-		return string(runes)
-	})
+	}).Many().Map(VecToStr)
 	testComplexParser(t, name, "name", "name", "", comp)
 }
 
 func TestParser_Option(t *testing.T) {
-	testComplexParser(t, Char(' ').Option(), " a", ' ', "a", comp)
-	testComplexParser(t, Char(' ').Option(), "a", nil, "a", comp)
+	testComplexParser(t, Char(' ').Option(nil), " a", ' ', "a", comp)
+	testComplexParser(t, Char(' ').Option(nil), "a", nil, "a", comp)
+	ab := Char('a').Seq(Char('b').Option(""))
+	testComplexParser(t, ab, "ab", []interface{}{'a', 'b'}, "", compVector)
+	testComplexParser(t, ab, "a", []interface{}{'a', ""}, "", compVector)
 }
 
 func TestParser_Skip(t *testing.T) {
 	testComplexParser(t, Char(' ').Many().Skip(), "            a", nil, "a", comp)
 	testComplexParser(t, Char(' ').Many().Skip(), "a", nil, "a", comp)
+}
+
+func TestParser_AtLeast(t *testing.T) {
+	a3 := Char('a').AtLeast(3)
+	testComplexParser(t, a3, "aaaab", []interface{}{'a', 'a', 'a', 'a'}, "b", compVector)
+	testComplexParser(t, a3, "aaab", []interface{}{'a', 'a', 'a'}, "b", compVector)
+	testComplexParser(t, a3, "aaa", []interface{}{'a', 'a', 'a'}, "", compVector)
+	testComplexParserFailed(t, a3, "aa")
+	testComplexParserFailed(t, a3, "ab")
+	b0 := Char('b').AtLeast(0)
+	testComplexParser(t, b0, "bbba", []interface{}{'b', 'b', 'b'}, "a", compVector)
+}
+
+func TestCalculator1(t *testing.T) {
+	testComplexParser(t, FloatValue, "123", 123.0, "", comp)
+	testComplexParser(t, FloatValue, "0", 0.0, "", comp)
+	testComplexParser(t, FloatValue, "123.45", 123.45, "", comp)
+	testComplexParser(t, FloatValue, "0.123", 0.123, "", comp)
+	testComplexParser(t, FloatValue, "12.0", 12.0, "", comp)
+	testComplexParser(t, FloatValue, "02.1", 0.0, "2.1", comp)
 }

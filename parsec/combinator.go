@@ -4,11 +4,8 @@ import (
 	"github.com/dox4/maque-lang/option"
 )
 
-type Mapper = func(interface{}) interface{}
-type Biop = func(interface{}, interface{}) interface{}
 
 func (p Parser) Accumulate(mapper Mapper, reducer Biop, base interface{}) Parser {
-
 	return func(s string) (string, *option.Option) {
 		for {
 			remainder, result := p(s)
@@ -40,9 +37,40 @@ func (p Parser) Many() Parser {
 	}
 }
 
+func (p Parser) AtLeast(atLeast int) Parser {
+	if atLeast == 0 {
+		return p.Many()
+	}
+	return func(s string) (string, *option.Option) {
+		var resultSet []interface{} = nil
+		var remainder string = s
+		var result *option.Option
+		count := atLeast
+		for count > 0 {
+			remainder, result = p(remainder)
+			if result.IsNil() {
+				return s, option.OfNil()
+			} else {
+				resultSet = append(resultSet, result.Get())
+			}
+			count = count - 1
+		}
+		for {
+			remainder2, result := p(remainder)
+			if result.IsNil() {
+				return remainder, option.OfValue(resultSet)
+			} else {
+				resultSet = append(resultSet, result.Get())
+			}
+			remainder = remainder2
+		}
+	}
+}
+
 func (p Parser) Seq(others ...Parser) Parser {
 	return func(s string) (string, *option.Option) {
-		remainder, result := p(s)
+		remainder := s
+		remainder, result := p(remainder)
 		if result.IsNil() {
 			return s, option.OfNil()
 		}
@@ -105,11 +133,11 @@ func (p Parser) PackedBy(left, right Parser) Parser {
 	return left.TakeRight(p).TakeLeft(right)
 }
 
-func (p Parser) Option() Parser {
+func (p Parser) Option(defaultValue interface{}) Parser {
 	return func(s string) (string, *option.Option) {
 		remainder, result := p(s)
 		if result.IsNil() {
-			return s, option.OfNil()
+			return s, option.OfNilable(defaultValue)
 		}
 		return remainder, result
 	}
@@ -117,10 +145,7 @@ func (p Parser) Option() Parser {
 
 func (p Parser) Skip() Parser {
 	return func(s string) (string, *option.Option) {
-		remainder, result := p(s)
-		if result.IsNil() {
-			return s, option.OfNil()
-		}
+		remainder, _ := p(s)
 		return remainder, option.OfNil()
 	}
 }
