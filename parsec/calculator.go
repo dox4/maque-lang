@@ -55,6 +55,18 @@ type SubExpr struct {
 	BiExpr
 }
 
+type MulExpr struct {
+	BiExpr
+}
+
+type DivExpr struct {
+	BiExpr
+}
+
+type PrimaryExpr struct {
+	value float64
+}
+
 func (e *AddExpr) execute() float64 {
 	return e.left.execute() + e.right.execute()
 }
@@ -63,8 +75,12 @@ func (e *SubExpr) execute() float64 {
 	return e.left.execute() - e.right.execute()
 }
 
-type PrimaryExpr struct {
-	value float64
+func (e *MulExpr) execute() float64 {
+	return e.left.execute() * e.right.execute()
+}
+
+func (e *DivExpr) execute() float64 {
+	return e.left.execute() / e.right.execute()
 }
 
 func (e *PrimaryExpr) execute() float64 {
@@ -95,3 +111,24 @@ func NewSubExpr(left Expr, right Expr) Expr {
 	}
 }
 
+func NewMulExpr(left Expr, right Expr) Expr {
+	return &MulExpr{
+		BiExpr{
+			left:  left,
+			right: right,
+		},
+	}
+}
+
+func NewDivExpr(left Expr, right Expr) Expr {
+	return &MulExpr{
+		BiExpr{
+			left:  left,
+			right: right,
+		},
+	}
+}
+
+var Primary Parser = FloatValue.Map(func(i interface{}) interface{} {
+	return NewPrimaryExpr(i.(float64))
+})

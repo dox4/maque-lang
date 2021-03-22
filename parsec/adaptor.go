@@ -1,8 +1,11 @@
 package parsec
 
 import (
+	"github.com/dox4/maque-lang/decltype"
 	"github.com/dox4/maque-lang/option"
 )
+
+type Mapper = decltype.Mapper
 
 func (p Parser) Map(convertor Mapper) Parser {
 	return func(s string) (string, *option.Option) {
@@ -13,9 +16,6 @@ func (p Parser) Map(convertor Mapper) Parser {
 		return s, option.OfNil()
 	}
 }
-
-type Mapper = func(interface{}) interface{}
-type Biop = func(interface{}, interface{}) interface{}
 
 var SingletonList Mapper = func(i interface{}) interface{} {
 	return []interface{}{i}

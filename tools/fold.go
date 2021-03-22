@@ -1,25 +1,25 @@
 package tools
 
 import (
-	"github.com/dox4/maque-lang/parsec"
+	"github.com/dox4/maque-lang/decltype"
 )
 
-func Foldl(reducer parsec.Biop, base interface{}, list []interface{}) interface{} {
+func Foldl(reducer decltype.Biop, base interface{}, list []interface{}) interface{} {
 	return foldl(reducer, base, list, 0)
 }
 
-func foldl(reducer parsec.Biop, base interface{}, list []interface{}, index int) interface{} {
+func foldl(reducer decltype.Biop, base interface{}, list []interface{}, index int) interface{} {
 	if index >= len(list) {
 		return base
 	}
 	return foldl(reducer, reducer(base, list[index]), list, index+1)
 }
 
-func Foldr(reducer parsec.Biop, base interface{}, list []interface{}) interface{} {
+func Foldr(reducer decltype.Biop, base interface{}, list []interface{}) interface{} {
 	return foldr(reducer, base, list, len(list)-1)
 }
 
-func foldr(reducer parsec.Biop, base interface{}, list []interface{}, index int) interface{} {
+func foldr(reducer decltype.Biop, base interface{}, list []interface{}, index int) interface{} {
 	if index < 0 {
 		return base
 	}

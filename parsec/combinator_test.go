@@ -5,6 +5,7 @@ import (
 	"testing"
 	"unicode"
 
+	"github.com/dox4/maque-lang/pair"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -124,4 +125,29 @@ func TestCalculator1(t *testing.T) {
 	testComplexParser(t, FloatValue, "0.123", 0.123, "", comp)
 	testComplexParser(t, FloatValue, "12.0", 12.0, "", comp)
 	testComplexParser(t, FloatValue, "02.1", 0.0, "2.1", comp)
+}
+
+func compPair(i interface{}, j interface{}) bool {
+	p1 := i.(*pair.Pair)
+	p2 := j.(*pair.Pair)
+	return p1.First() == p2.First() && p1.Second() == p2.Second()
+}
+func TestParser_And(t *testing.T) {
+	ab := Char('a').And(Char('b'))
+	testComplexParser(t, ab, "ab", pair.NewPair('a', 'b'), "", compPair)
+	testComplexParserFailed(t, ab, "bc")
+	testComplexParserFailed(t, ab, "ac")
+}
+
+
+func TestParser_ChainLeft(t *testing.T) {
+	digit := Digit1to9.Map(func(i interface{}) interface{} {
+		return i.(int32) - '0'
+	})
+	addSome := Char('+').And(digit).Many()
+	expr := digit.ChainLeft(addSome, func(i1, i2 interface{}) interface{} {
+		return i1.(int32) + i2.(*pair.Pair).Second().(int32)
+	})
+	testComplexParser(t, expr, "1+2+3+4", int32(10), "", comp)
+	testComplexParser(t, expr, "1", int32(1), "", comp)
 }

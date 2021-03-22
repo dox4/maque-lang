@@ -1,9 +1,13 @@
 package parsec
 
 import (
+	"github.com/dox4/maque-lang/decltype"
 	"github.com/dox4/maque-lang/option"
+	"github.com/dox4/maque-lang/pair"
+	"github.com/dox4/maque-lang/tools"
 )
 
+type Biop = decltype.Biop
 
 func (p Parser) Accumulate(mapper Mapper, reducer Biop, base interface{}) Parser {
 	return func(s string) (string, *option.Option) {
@@ -147,5 +151,33 @@ func (p Parser) Skip() Parser {
 	return func(s string) (string, *option.Option) {
 		remainder, _ := p(s)
 		return remainder, option.OfNil()
+	}
+}
+
+func (p Parser) And(right Parser) Parser {
+	return func(s string) (string, *option.Option) {
+		remainder, result1 := p(s)
+		if result1.IsNil() {
+			return s, option.OfNil()
+		}
+		remainder, result2 := right(remainder)
+		if result2.IsNil() {
+			return s, option.OfNil()
+		}
+		return remainder, option.OfValue(pair.NewPair(result1.Get(), result2.Get()))
+	}
+}
+
+func (p Parser) ChainLeft(tails Parser, reducer Biop) Parser {
+	return func(s string) (string, *option.Option) {
+		remainder, result := p(s)
+		if result.IsNil() {
+			return s, option.OfNil()
+		}
+		remainder2, result2 := tails(remainder)
+		if result2.IsNil() {
+			return s, option.OfNil()
+		}
+		return remainder2, option.OfValue(tools.Foldl(reducer, result.Get(), result2.Get().([]interface{})))
 	}
 }
