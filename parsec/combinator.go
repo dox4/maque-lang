@@ -22,20 +22,15 @@ func (p Parser) Accumulate(mapper Mapper, reducer Biop, base interface{}) Parser
 		}
 	}
 }
-
+// Many return the parser that parse the pattern like {pattern}*
+// which indicator the pattern will match 0 or more times
 func (p Parser) Many() Parser {
 	return func(s string) (string, *option.Option) {
 		remainder, result := (p)(s)
-		var resultSet []interface{} = nil
+		var resultSet []interface{} = []interface{}{}
 		for result.IsPresent() {
 			resultSet = append(resultSet, result.Get())
 			remainder, result = (p)(remainder)
-		}
-		// if resultSet is nil and reunt option.OfNilable(resultSet)
-		// option.value will be nil<[]interface{}>
-		// while will cause option.IsNil() false
-		if resultSet == nil {
-			return remainder, option.OfNil()
 		}
 		return remainder, option.OfValue(resultSet)
 	}

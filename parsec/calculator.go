@@ -2,6 +2,8 @@ package parsec
 
 import (
 	"strconv"
+
+	"github.com/dox4/maque-lang/pair"
 )
 
 var Digit1to9 Parser = OneOf("123456789")
@@ -129,6 +131,32 @@ func NewDivExpr(left Expr, right Expr) Expr {
 	}
 }
 
-var Primary Parser = FloatValue.Map(func(i interface{}) interface{} {
+var OptionSpace Parser = OneOf(" \t").Many()
+
+var Primary Parser = FloatValue.PackedBy(OptionSpace, OptionSpace).Map(func(i interface{}) interface{} {
 	return NewPrimaryExpr(i.(float64))
 })
+
+func BiopBuilder(op int32) func(left Expr, right Expr) Expr {
+	switch op {
+	case '*':
+		return NewMulExpr
+	case '/':
+		return NewDivExpr
+	case '+':
+		return NewAddExpr
+	case '-':
+		return NewSubExpr
+	default:
+		panic("unrecognized operator: " + string(op))
+	}
+}
+
+var GenericBiopBuilder = func(i1, i2 interface{}) interface{} {
+	p := i2.(*pair.Pair)
+	return BiopBuilder(p.First().(int32))(i1.(Expr), p.Second().(Expr))
+}
+
+var Term Parser = Primary.ChainLeft(Char('*').Or(Char('/')).And(Primary).Many(), GenericBiopBuilder)
+
+var Expression Parser = Term.ChainLeft(Char('+').Or(Char('-')).And(Term).Many(), GenericBiopBuilder)

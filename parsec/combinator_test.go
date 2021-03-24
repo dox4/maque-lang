@@ -151,3 +151,14 @@ func TestParser_ChainLeft(t *testing.T) {
 	testComplexParser(t, expr, "1+2+3+4", int32(10), "", comp)
 	testComplexParser(t, expr, "1", int32(1), "", comp)
 }
+
+
+func TestParser_Expression(t *testing.T) {
+	Calculator := Expression.Map(func(i interface{}) interface{} {
+		return i.(Expr).execute()
+	})
+	testComplexParser(t, Calculator, " 1.23 - 3.45", -2.22, "", comp)
+	testComplexParser(t, Calculator, "1.0-3", -2.0, "", comp)
+	testComplexParser(t, Calculator, "4.5 * 2.0 - 3*2", 3.0, "", comp)
+	testComplexParser(t, Calculator, "1", 1.0, "", comp)
+}
