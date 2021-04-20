@@ -123,7 +123,7 @@ func NewMulExpr(left Expr, right Expr) Expr {
 }
 
 func NewDivExpr(left Expr, right Expr) Expr {
-	return &MulExpr{
+	return &DivExpr{
 		BiExpr{
 			left:  left,
 			right: right,

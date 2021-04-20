@@ -139,7 +139,6 @@ func TestParser_And(t *testing.T) {
 	testComplexParserFailed(t, ab, "ac")
 }
 
-
 func TestParser_ChainLeft(t *testing.T) {
 	digit := Digit1to9.Map(func(i interface{}) interface{} {
 		return i.(int32) - '0'
@@ -152,7 +151,6 @@ func TestParser_ChainLeft(t *testing.T) {
 	testComplexParser(t, expr, "1", int32(1), "", comp)
 }
 
-
 func TestParser_Expression(t *testing.T) {
 	Calculator := Expression.Map(func(i interface{}) interface{} {
 		return i.(Expr).execute()
@@ -161,4 +159,6 @@ func TestParser_Expression(t *testing.T) {
 	testComplexParser(t, Calculator, "1.0-3", -2.0, "", comp)
 	testComplexParser(t, Calculator, "4.5 * 2.0 - 3*2", 3.0, "", comp)
 	testComplexParser(t, Calculator, "1", 1.0, "", comp)
+	testComplexParser(t, Calculator, "1/2", 0.5, "", comp)
+	testComplexParser(t, Calculator, "1 + 2 - 2.5 * 4.0 / 5", 1.0, "", comp)
 }
